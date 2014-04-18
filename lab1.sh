@@ -3,6 +3,7 @@
 cd /root/medialab/
 
 LIST=$(ls)
+MEDIA=$(grep filename media.xml | grep -v '><' | grep -v 'gportal' | grep -v 'NULL' | awk -F">" '{ print $2 }' | awk -F"<" '{ print $1 }')
 
 for ITEM in $LIST
 do
@@ -13,8 +14,8 @@ do
 		continue
 	fi
 
-	if [ grep "$ITEM" media.xml = "" ]
+	if [[ *"$ITEM"* != "$MEDIA" ]]
 	then
 		echo "$ITEM not found in media.xml"
-	fi	
+	fi
 done
