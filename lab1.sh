@@ -5,6 +5,8 @@ cd /root/medialab/
 LIST=$(ls)
 MEDIA=$(grep filename media.xml | grep -v '><' | grep -v 'gportal' | grep -v 'NULL' | awk -F">" '{ print $2 }' | awk -F"<" '{ print $1 }')
 
+COUNT=0
+
 for ITEM in $LIST
 do
 #	for testing:
@@ -14,8 +16,11 @@ do
 		continue
 	fi
 
-	if [[ *"$ITEM"* != "$MEDIA" ]]
+	if [[ ! $(grep "$ITEM" media.xml) ]]
 	then
 		echo "$ITEM not found in media.xml"
+		(( COUNT++ ))
 	fi
 done
+echo "$COUNT items not found"
+
