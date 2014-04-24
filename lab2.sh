@@ -14,5 +14,5 @@ do
 		(( COUNT++ ))
 	fi
 done
-echo "$COUNT items not found"
+echo "$COUNT media files not found"
 
