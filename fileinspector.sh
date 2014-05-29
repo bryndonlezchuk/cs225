@@ -1,100 +1,109 @@
 #!/bin/bash
-#set -x
 
-ARG="$1"
-FILETABLE="/root/bin/filetable.txt"
+setup () {
+	IFSTEMP="$IFS"
+	IFS=$' \n\t'
+	getargs "$@"
+}
 
-FILE="${ARG##*/}"
-DIR="${ARG%/*}"
+quit () {
+	IFS="$IFSTEMP"
 
-while [[ ! -f "$FILETABLE" ]]
-do
-	echo "Filetable not found. Would you like to specify a file?"
-	read INPUT
-
-	if [[ "$INPUT" =~ [nN] || "$INPUT" =~ [nN][oO] ]]
+	if [[ -z $1 ]]
 	then
-		echo "Exiting fileinspector"
-		exit
-	elif [[ "$INPUT" =~ [yY] || "$INPUT" =~ [yY][eE][sS] ]]
+		exit 0
+	elif [[ $1 =~ [0-9]* ]]
 	then
-		echo "Please enter directory for the filetable:"
-		read FILETABLE
-		echo
-	else
-		echo "Invalid entry, exiting script"
-                exit 1
-	fi
-done
-
-if [[ -z "$DIR" ]]
-then
-	echo "Do you want to run fileinspector on the current directory?"
-
-	select CHOICE in "Yes" "No"
-	do
-		case $CHOICE in
-			Yes)
-				DIR="."
-				break ;;
-			No)
-				exit ;;
-		esac
-	done
-fi
-
-if ! cd "$DIR"
-then
-	echo "Invalid directory"
-	exit 1
-fi
-
-if [[ -z "$FILE" ]]
-then
-	#Directory
-	SET="$(ls -1)"
-else
-	#File
-
-	#Check if file exist
-	if [[ ! -f "$FILE" ]]
-	then
-		echo "File does not exist"
+		exit "$1"
+	else	
 		exit 1
 	fi
+}
 
-	SET="$FILE"
-fi
+getargs () {
+	local I=0
+	for ITEM in $@
+	do
+		echo "$ITEM"
+		ARGS[$I]="$ITEM"
+		((I++))
+	done
 
-IFS=$'\n'
+#	echo ${ARGS[@]}
+}
 
-#for each item, match to mime
-#from the mime type, apply file extention
-for ITEM in $SET
-do
-	MIME="$(file --mime-type $ITEM | awk -F": " '{print $2}')"
-	echo "Searching for type $MIME for file $ITEM"
-	
-	FILETYPE=$(grep "$MIME" $FILETABLE)
-	
-	if [[ ! -z "$FILETYPE" ]]
-	then
-		echo "Found $FILETYPE"
+syntax () {
+	echo
+}
 
-		FILETYPE="${FILETYPE##*#@#}"
-		echo "Filetype for $ITEM is $FILETYPE"
+message () {
+	echo
+}
 
-		if [[ -z "${ITEM##*$FILETYPE}" ]]
-		then
-			echo "Extention already exists"
-			echo
-			continue
-		else
-			echo "Applying extention $FILETYPE to $ITEM"
-			echo
-			mv "$ITEM" "${ITEM}.$FILETYPE"
-		fi
-	else
-		echo "Filetype $FILETYPE was not found in filetable."
-	fi
+errormessage () {
+	cmessage "red" "ERROR: $1\n"
+}
+
+cmessage () {
+	local COLOR
+	local MSG=$2
+
+	case $1 in
+		black)	COLOR='\e[0;30m';;
+		red)	COLOR='\e[0;31m';;
+		green)	COLOR='\e[0;32m';;
+		yellow)	COLOR='\e[0;33m';;
+		blue)	COLOR='\e[0;34m';;
+		purple) COLOR='\e[0;35m';;
+		cyan)	COLOR='\e[0;36m';;
+		white)	COLOR='\e[0;37m';;
+	esac
+
+	echo -ne "${COLOR}${MSG}\e[0;37m"
+}
+
+main () {
+	echo
+}
+
+VERBOSE="OFF"
+LOGFILE="OFF"
+FILETABLE="/root/bin/filetable.txt"
+
+#getops
+while getopts :dl:f:vh opt; do
+
+	case $opt in
+		#Debug
+		d)	set -x;;
+
+		#Help
+		h)	echo "Help coming soon"
+			quit;;
+
+		#Logfile
+		l)	;;
+
+		#Filetable
+		f)	FILETABLE="$OPTARG"
+                        if [[ ! -f "$FILETABLE" ]]
+                        then
+				errormessage "Filetable could not be located at $FILETABLE"
+                        fi;;
+
+		#Verbose
+		v)	VERBOSE="ON";;
+
+		#Recursive
+		r)	;;
+
+		#Other
+		\?) 	echo "Unknown option"
+			$0 -h;;
+	esac
+
 done
+shift $(($OPTIND-1))
+
+setup "$@"
+quit
