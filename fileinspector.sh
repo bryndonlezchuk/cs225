@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#fileinspector v3	May 29, 2014
+#fileinspector v1.3	May 29, 2014
 #Bryndon Lezchuk (bryndonlezchuk@gmail.com)
 
 setup () {
